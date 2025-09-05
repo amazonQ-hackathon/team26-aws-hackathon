@@ -57,28 +57,75 @@ GET /v1/filters
 
 ## 2. 히스토리 조회
 
-### 2.1 매칭 히스토리
+### 2.1 필터 생성 이후 등록된 매물 조회
 ```
-GET /v1/history/{filterId}
-- 특정 필터의 매칭 히스토리 조회
+GET /v1/filters/{filterId}/matches
+- 필터 생성 이후에 등록된 매물 중 조건에 맞는 매물 목록
+- 알림을 받은 매물들 (DB에 저장된 매칭 히스토리)
 - Headers: { "X-User-Id": "1" }
-- 예시: GET /v1/history/2 (2번 필터 히스토리)
-- Response: [
-    {
-      "propertyId": "zigbang_12345",
-      "matchedAt": "2024-01-15T14:30:00Z",
-      "propertyInfo": {
-        "title": "강남구 논현동 신축 아파트",
-        "price": 45000,
+- Query Parameters:
+  - page: 페이지 번호 (default: 1)
+  - limit: 페이지당 개수 (default: 20, max: 50)
+- 예시: GET /v1/filters/2/matches?page=1&limit=20
+- Response: {
+    totalCount: 12,
+    currentPage: 1,
+    totalPages: 1,
+    matches: [
+      {
+        "propertyId": "zigbang_12345",
+        "matchedAt": "2024-01-15T14:30:00Z",
+        "propertyInfo": {
+          "title": "강남구 논현동 신축 아파트",
+          "price": 45000,
+          "propertyType": "LEASE",
+          "local1": "서울시",
+          "local2": "강남구",
+          "local3": "논현동",
+          "floor": 5,
+          "direction": "남",
+          "sourceUrl": "https://zigbang.com/rooms/12345",
+          "crawledAt": "2024-01-15T14:30:00Z"
+        },
+        "notificationSent": true,
+        "clickedAt": "2024-01-15T15:45:00Z"
+      }
+      // ... 11개 더
+    ]
+  }
+```
+
+### 2.2 필터 생성 이전 등록된 매물 조회
+```
+GET /v1/filters/{filterId}/history
+- 필터 생성 이전에 등록된 과거 일주일치 매물 중 조건에 맞는 매물
+- 실시간 조회 (별도 DB 저장 안함)
+- Headers: { "X-User-Id": "1" }
+- Query Parameters:
+  - page: 페이지 번호 (default: 1)
+  - limit: 페이지당 개수 (default: 20, max: 50)
+- 예시: GET /v1/filters/2/history?page=1&limit=20
+- Response: {
+    totalCount: 33,
+    currentPage: 1,
+    totalPages: 2,
+    properties: [
+      {
+        "propertyId": "zigbang_67890",
+        "title": "강남구 역삼동 오피스텔",
+        "price": 35000,
         "propertyType": "LEASE",
+        "local1": "서울시",
         "local2": "강남구",
-        "floor": 5,
-        "sourceUrl": "https://zigbang.com/rooms/12345"
-      },
-      "notificationSent": true,
-      "clickedAt": "2024-01-15T15:45:00Z"
-    }
-  ]
+        "local3": "역삼동",
+        "floor": 8,
+        "direction": "동",
+        "sourceUrl": "https://zigbang.com/rooms/67890",
+        "crawledAt": "2024-01-10T09:15:00Z"
+      }
+      // ... 19개 더
+    ]
+  }
 ```
 
 ## 3. 데이터 타입 정의
