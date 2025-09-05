@@ -1,26 +1,32 @@
-# Build artifacts
-sosimBack/build/
-*.zip
-
-# Terraform
-sosimBack/terraform/.terraform/
-sosimBack/terraform/*.tfstate
-sosimBack/terraform/*.tfstate.backup
-sosimBack/terraform/.terraform.lock.hcl
-
-# AWS
-.aws/
+# Terraform (718MB)
+IaC/.terraform/
+IaC/.terraform.lock.hcl
+IaC/terraform.tfstate*
+IaC/build/
+*.exe
 
 # Node modules
 node_modules/
+sosimFront/node_modules/
+package-lock.json
+yarn.lock
 
-# IDE
-.vscode/
-.idea/
+# Build outputs
+*.zip
+build/
+sosimBack/build/
+
+# Large binaries
+terraform.exe
+terraform.zip
 
 # OS
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
 
 # Logs
 *.log
