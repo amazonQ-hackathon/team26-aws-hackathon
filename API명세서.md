@@ -158,9 +158,151 @@ const PROPERTY_TYPE = {
 
 
 
-## 4. 에러 응답
+## 4. Mock 데이터 예시
 
-### 4.1 공통 에러 형식
+### 4.1 필터 등록 Mock 데이터
+```json
+{
+  "filterName": "강남 전세 필터",
+  "conditions": {
+    "priceMin": 20000,
+    "priceMax": 80000,
+    "direction": ["남", "동"],
+    "approvalDateMin": "2015-01-01",
+    "local1": "서울시",
+    "local2": "강남구",
+    "propertyType": "LEASE",
+    "floorMin": 3,
+    "floorMax": 15
+  }
+}
+```
+
+### 4.2 필터 목록 조회 Mock 응답
+```json
+[
+  {
+    "filterId": 1,
+    "filterName": "강남 전세 필터",
+    "conditions": {
+      "priceMin": 20000,
+      "priceMax": 80000,
+      "direction": ["남", "동"],
+      "local1": "서울시",
+      "local2": "강남구",
+      "propertyType": "LEASE"
+    },
+    "isActive": true,
+    "createdAt": "2024-01-15T10:30:00Z"
+  },
+  {
+    "filterId": 2,
+    "filterName": "홍대 월세 필터",
+    "conditions": {
+      "priceMax": 5000,
+      "local2": "마포구",
+      "propertyType": "RENT"
+    },
+    "isActive": true,
+    "createdAt": "2024-01-16T14:20:00Z"
+  }
+]
+```
+
+### 4.3 매칭 매물 조회 Mock 응답
+```json
+{
+  "totalCount": 25,
+  "currentPage": 1,
+  "totalPages": 2,
+  "matches": [
+    {
+      "propertyId": "zigbang_46139342",
+      "matchedAt": "2024-01-17T09:15:00Z",
+      "propertyInfo": {
+        "title": "강남구 논현동 신축 아파트",
+        "price": 45000,
+        "propertyType": "LEASE",
+        "local1": "서울시",
+        "local2": "강남구",
+        "local3": "논현동",
+        "floor": 8,
+        "direction": "남",
+        "approvalDate": "2020-03-15",
+        "sourceUrl": "https://zigbang.com/rooms/46139342",
+        "crawledAt": "2024-01-17T09:10:00Z"
+      },
+      "notificationSent": true,
+      "clickedAt": "2024-01-17T10:30:00Z"
+    }
+  ]
+}
+```
+
+### 4.4 히스토리 조회 Mock 응답
+```json
+{
+  "totalCount": 18,
+  "currentPage": 1,
+  "totalPages": 1,
+  "properties": [
+    {
+      "propertyId": "zigbang_46139340",
+      "title": "강남구 삼성동 아파트",
+      "price": 55000,
+      "propertyType": "LEASE",
+      "local1": "서울시",
+      "local2": "강남구",
+      "local3": "삼성동",
+      "floor": 6,
+      "direction": "남",
+      "approvalDate": "2019-11-10",
+      "sourceUrl": "https://zigbang.com/rooms/46139340",
+      "sourceSite": "직방",
+      "crawledAt": "2024-01-14T16:45:00Z",
+      "isActive": true
+    }
+  ]
+}
+```
+
+### 4.5 테스트용 cURL 명령어
+```bash
+# 1. 필터 등록
+curl -X POST https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters \
+  -H "X-User-Id: 1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filterName": "강남 전세 필터",
+    "conditions": {
+      "priceMin": 20000,
+      "priceMax": 80000,
+      "local1": "서울시",
+      "local2": "강남구",
+      "propertyType": "LEASE"
+    }
+  }'
+
+# 2. 필터 목록 조회
+curl -X GET https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters \
+  -H "X-User-Id: 1"
+
+# 3. 필터별 매칭 매물 조회
+curl -X GET https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters/1/matches?page=1&limit=20 \
+  -H "X-User-Id: 1"
+
+# 4. 필터별 히스토리 조회
+curl -X GET https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters/1/history?page=1&limit=20 \
+  -H "X-User-Id: 1"
+
+# 5. 필터 삭제
+curl -X DELETE https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters/1 \
+  -H "X-User-Id: 1"
+```
+
+## 5. 에러 응답
+
+### 5.1 공통 에러 형식
 ```javascript
 {
   error: {
@@ -171,7 +313,7 @@ const PROPERTY_TYPE = {
 }
 ```
 
-### 4.2 에러 코드
+### 5.2 에러 코드
 - `INVALID_INPUT`: 입력값 오류
 - `FILTER_NOT_FOUND`: 필터를 찾을 수 없음
 - `USER_NOT_FOUND`: 사용자를 찾을 수 없음

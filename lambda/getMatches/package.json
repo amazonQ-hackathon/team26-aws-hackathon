@@ -1,0 +1,9 @@
+{
+  "name": "get-matches",
+  "version": "1.0.0",
+  "description": "Get filter matches",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1000.0"
+  }
+}

@@ -28,7 +28,8 @@ resource "aws_api_gateway_deployment" "house_finder_deployment" {
     aws_api_gateway_integration.filters_post,
     aws_api_gateway_integration.filters_get,
     aws_api_gateway_integration.filters_delete,
-    aws_api_gateway_integration.history_get
+    aws_api_gateway_integration.matches_get,
+    aws_api_gateway_integration.filter_history_get
   ]
 
   rest_api_id = aws_api_gateway_rest_api.house_finder_api.id
@@ -107,6 +108,22 @@ resource "aws_dynamodb_table" "user_filter_matches" {
     type = "S"
   }
 
+  attribute {
+    name = "filterId"
+    type = "S"
+  }
+
+  attribute {
+    name = "matchedAt"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name     = "filterId-matchedAt-index"
+    hash_key = "filterId"
+    range_key = "matchedAt"
+  }
+
   tags = {
     Name = "house-finder-user-filter-matches"
   }
@@ -120,6 +137,6 @@ resource "aws_sns_topic" "house_notifications" {
 # EventBridge Rule for Crawling
 resource "aws_cloudwatch_event_rule" "crawling_schedule" {
   name                = "house-finder-crawling"
-  description         = "Trigger crawling every 5 minutes"
-  schedule_expression = "rate(5 minutes)"
+  description         = "Trigger crawling every 1 minute"
+  schedule_expression = "rate(1 minute)"
 }
