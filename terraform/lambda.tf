@@ -79,12 +79,13 @@ resource "aws_lambda_function" "register_filter" {
 }
 
 resource "aws_lambda_function" "get_filters" {
-  filename         = "../lambda/getFilters.zip"
+  filename         = "getFilters.zip"
   function_name    = "house-finder-get-filters"
   role            = aws_iam_role.lambda_role.arn
   handler         = "index.handler"
   runtime         = "nodejs18.x"
   timeout         = 30
+  source_code_hash = filebase64sha256("getFilters.zip")
 
   environment {
     variables = {
@@ -94,12 +95,13 @@ resource "aws_lambda_function" "get_filters" {
 }
 
 resource "aws_lambda_function" "delete_filter" {
-  filename         = "../lambda/deleteFilter.zip"
+  filename         = "deleteFilter.zip"
   function_name    = "house-finder-delete-filter"
   role            = aws_iam_role.lambda_role.arn
   handler         = "index.handler"
   runtime         = "nodejs18.x"
   timeout         = 30
+  source_code_hash = filebase64sha256("deleteFilter.zip")
 
   environment {
     variables = {
@@ -108,33 +110,72 @@ resource "aws_lambda_function" "delete_filter" {
   }
 }
 
-resource "aws_lambda_function" "get_history" {
-  filename         = "../lambda/getHistory.zip"
-  function_name    = "house-finder-get-history"
+resource "aws_lambda_function" "get_matches" {
+  filename         = "getMatches.zip"
+  function_name    = "house-finder-get-matches"
   role            = aws_iam_role.lambda_role.arn
   handler         = "index.handler"
   runtime         = "nodejs18.x"
   timeout         = 30
+  source_code_hash = filebase64sha256("getMatches.zip")
 
   environment {
     variables = {
+      USER_FILTERS_TABLE = aws_dynamodb_table.user_filters.name
       USER_FILTER_MATCHES_TABLE = aws_dynamodb_table.user_filter_matches.name
       PROPERTIES_TABLE = aws_dynamodb_table.properties.name
     }
   }
 }
 
+resource "aws_lambda_function" "get_history" {
+  filename         = "getHistory.zip"
+  function_name    = "house-finder-get-history"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.handler"
+  runtime         = "nodejs18.x"
+  timeout         = 30
+  source_code_hash = filebase64sha256("getHistory.zip")
+
+  environment {
+    variables = {
+      USER_FILTERS_TABLE = aws_dynamodb_table.user_filters.name
+      PROPERTIES_TABLE = aws_dynamodb_table.properties.name
+    }
+  }
+}
+
 resource "aws_lambda_function" "crawl_zigbang" {
-  filename         = "../lambda/crawlZigbang.zip"
+  filename         = "crawlZigbang.zip"
   function_name    = "house-finder-crawl-zigbang"
   role            = aws_iam_role.lambda_role.arn
   handler         = "index.handler"
   runtime         = "nodejs18.x"
   timeout         = 300
+  source_code_hash = filebase64sha256("crawlZigbang.zip")
 
   environment {
     variables = {
       PROPERTIES_TABLE = aws_dynamodb_table.properties.name
+    }
+  }
+}
+
+resource "aws_lambda_function" "match_properties" {
+  filename         = "matchProperties.zip"
+  function_name    = "house-finder-match-properties"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.handler"
+  runtime         = "nodejs18.x"
+  timeout         = 300
+  source_code_hash = filebase64sha256("matchProperties.zip")
+
+  environment {
+    variables = {
+      USER_FILTERS_TABLE = aws_dynamodb_table.user_filters.name
+      PROPERTIES_TABLE = aws_dynamodb_table.properties.name
+      USER_FILTER_MATCHES_TABLE = aws_dynamodb_table.user_filter_matches.name
+      SNS_TOPIC_ARN = aws_sns_topic.house_notifications.arn
     }
   }
 }
@@ -164,6 +205,14 @@ resource "aws_lambda_permission" "delete_filter_permission" {
   source_arn    = "${aws_api_gateway_rest_api.house_finder_api.execution_arn}/*/*"
 }
 
+resource "aws_lambda_permission" "get_matches_permission" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_matches.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.house_finder_api.execution_arn}/*/*"
+}
+
 resource "aws_lambda_permission" "get_history_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -179,10 +228,25 @@ resource "aws_cloudwatch_event_target" "crawling_target" {
   arn       = aws_lambda_function.crawl_zigbang.arn
 }
 
-resource "aws_lambda_permission" "allow_eventbridge" {
+# EventBridge Target for Matching
+resource "aws_cloudwatch_event_target" "matching_target" {
+  rule      = aws_cloudwatch_event_rule.crawling_schedule.name
+  target_id = "MatchingLambdaTarget"
+  arn       = aws_lambda_function.match_properties.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_crawling" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.crawl_zigbang.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.crawling_schedule.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_matching" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.match_properties.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.crawling_schedule.arn
 }

@@ -107,6 +107,56 @@ resource "aws_api_gateway_integration" "history_get" {
   uri                    = aws_lambda_function.get_history.invoke_arn
 }
 
+# /v1/filters/{filterId}/matches resource
+resource "aws_api_gateway_resource" "filter_matches" {
+  rest_api_id = aws_api_gateway_rest_api.house_finder_api.id
+  parent_id   = aws_api_gateway_resource.filter_by_id.id
+  path_part   = "matches"
+}
+
+# GET /v1/filters/{filterId}/matches
+resource "aws_api_gateway_method" "matches_get" {
+  rest_api_id   = aws_api_gateway_rest_api.house_finder_api.id
+  resource_id   = aws_api_gateway_resource.filter_matches.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "matches_get" {
+  rest_api_id = aws_api_gateway_rest_api.house_finder_api.id
+  resource_id = aws_api_gateway_resource.filter_matches.id
+  http_method = aws_api_gateway_method.matches_get.http_method
+
+  integration_http_method = "POST"
+  type                   = "AWS_PROXY"
+  uri                    = aws_lambda_function.get_matches.invoke_arn
+}
+
+# /v1/filters/{filterId}/history resource
+resource "aws_api_gateway_resource" "filter_history" {
+  rest_api_id = aws_api_gateway_rest_api.house_finder_api.id
+  parent_id   = aws_api_gateway_resource.filter_by_id.id
+  path_part   = "history"
+}
+
+# GET /v1/filters/{filterId}/history
+resource "aws_api_gateway_method" "filter_history_get" {
+  rest_api_id   = aws_api_gateway_rest_api.house_finder_api.id
+  resource_id   = aws_api_gateway_resource.filter_history.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "filter_history_get" {
+  rest_api_id = aws_api_gateway_rest_api.house_finder_api.id
+  resource_id = aws_api_gateway_resource.filter_history.id
+  http_method = aws_api_gateway_method.filter_history_get.http_method
+
+  integration_http_method = "POST"
+  type                   = "AWS_PROXY"
+  uri                    = aws_lambda_function.get_history.invoke_arn
+}
+
 # CORS 설정
 resource "aws_api_gateway_method" "filters_options" {
   rest_api_id   = aws_api_gateway_rest_api.house_finder_api.id
