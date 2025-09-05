@@ -4,14 +4,15 @@
 
 ### 1.1 필터 등록
 ```
-POST /api/filters
+POST /v1/filters
 - 필터 등록 (사용자1이 여러개 필터 생성 가능)
+- Headers: { "X-User-Id": "1" }
 - Body: {
     filterName: "강남 전세",
     conditions: {
       priceMin: 10000,     // 1억원 (만원 단위)
       priceMax: 50000,     // 5억원 (선택)
-      direction: "남",      // 선택
+      direction: ["남", "동"],  // 선택 (배열)
       approvalDateMin: "2010-01-01",  // 선택
       local1: "서울시",     // 선택
       local2: "강남구",     // 선택
@@ -23,10 +24,19 @@ POST /api/filters
 - Response: { filterId: 1 }
 ```
 
-### 1.2 필터 목록 조회
+### 1.2 필터 삭제
 ```
-GET /api/users/1/filters
-- 사용자1의 모든 필터 목록 조회
+DELETE /v1/filters/{filterId}
+- 필터 삭제
+- Headers: { "X-User-Id": "1" }
+- Response: { success: true }
+```
+
+### 1.3 필터 목록 조회
+```
+GET /v1/filters
+- 사용자의 모든 필터 목록 조회
+- Headers: { "X-User-Id": "1" }
 - Response: [
     {
       filterId: 1,
@@ -45,50 +55,40 @@ GET /api/users/1/filters
   ]
 ```
 
-### 1.3 필터 수정
+## 2. 히스토리 조회
+
+### 2.1 매칭 히스토리
 ```
-PUT /api/filters/{filterId}
-- 필터 수정
-- Body: {
-    filterName: "수정된 필터명",
-    conditions: { ... }
-  }
-- Response: { success: true }
+GET /v1/history/{filterId}
+- 특정 필터의 매칭 히스토리 조회
+- Headers: { "X-User-Id": "1" }
+- 예시: GET /v1/history/2 (2번 필터 히스토리)
+- Response: [
+    {
+      "propertyId": "zigbang_12345",
+      "matchedAt": "2024-01-15T14:30:00Z",
+      "propertyInfo": {
+        "title": "강남구 논현동 신축 아파트",
+        "price": 45000,
+        "propertyType": "LEASE",
+        "local2": "강남구",
+        "floor": 5,
+        "sourceUrl": "https://zigbang.com/rooms/12345"
+      },
+      "notificationSent": true,
+      "clickedAt": "2024-01-15T15:45:00Z"
+    }
+  ]
 ```
 
-### 1.4 필터 삭제
-```
-DELETE /api/filters/{filterId}
-- 필터 삭제
-- Response: { success: true }
-```
+## 3. 데이터 타입 정의
 
-## 2. 필터 목록 조회
-
-### 2.1 사용자별 필터 목록
-```
-GET /api/users/{userId}/filters
-- 특정 사용자의 모든 필터 목록 조회
-- Response: [{ filterId, filterName, conditions, isActive, createdAt }]
-```
-
-## 3. 히스토리 조회
-
-### 3.1 매칭 히스토리
-```
-GET /api/history/1
-- 매칭 히스토리 조회 (userId=1 고정)
-- Response: [{ filterId, propertyId, matchedAt, propertyInfo }]
-```
-
-## 4. 데이터 타입 정의
-
-### 4.1 필터 조건 (conditions)
+### 3.1 필터 조건 (conditions)
 ```javascript
 {
   priceMin: Number,           // 최소가격 (만원 단위, 선택)
   priceMax: Number,           // 최대가격 (만원 단위, 선택)
-  direction: String,          // 방향 ("동/서/남/북", 선택)
+  direction: Array,           // 방향 (["동", "서", "남", "북"], 선택)
   approvalDateMin: String,    // 최소 사용승인일 ("YYYY-MM-DD", 선택)
   approvalDateMax: String,    // 최대 사용승인일 ("YYYY-MM-DD", 선택)
   local1: String,             // 시 (예: "인천시", 선택)
@@ -100,7 +100,7 @@ GET /api/history/1
 }
 ```
 
-### 4.2 매물타입 코드
+### 3.2 매물타입 코드
 ```javascript
 const PROPERTY_TYPE = {
   LEASE: "전세",
@@ -109,9 +109,11 @@ const PROPERTY_TYPE = {
 };
 ```
 
-## 5. 에러 응답
 
-### 5.1 공통 에러 형식
+
+## 4. 에러 응답
+
+### 4.1 공통 에러 형식
 ```javascript
 {
   error: {
@@ -122,7 +124,7 @@ const PROPERTY_TYPE = {
 }
 ```
 
-### 5.2 에러 코드
+### 4.2 에러 코드
 - `INVALID_INPUT`: 입력값 오류
 - `FILTER_NOT_FOUND`: 필터를 찾을 수 없음
 - `USER_NOT_FOUND`: 사용자를 찾을 수 없음
