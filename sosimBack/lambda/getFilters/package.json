@@ -1,0 +1,6 @@
+{
+  "name": "get-filters",
+  "version": "1.0.0",
+  "description": "Get user filters",
+  "main": "index.js"
+}

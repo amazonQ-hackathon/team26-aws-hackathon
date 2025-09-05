@@ -1,1 +1,26 @@
-node_modules
+# Build artifacts
+sosimBack/build/
+*.zip
+
+# Terraform
+sosimBack/terraform/.terraform/
+sosimBack/terraform/*.tfstate
+sosimBack/terraform/*.tfstate.backup
+sosimBack/terraform/.terraform.lock.hcl
+
+# AWS
+.aws/
+
+# Node modules
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
