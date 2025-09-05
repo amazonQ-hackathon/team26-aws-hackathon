@@ -15,21 +15,21 @@ export default function HouseIcon({ size = 60 }) {
         y="60"
         width="20"
         height="25"
-        fill="#4A90E2"
+        fill="#1B365D"
       />
       <Rect
         x="30"
         y="45"
         width="12"
         height="12"
-        fill="#4A90E2"
+        fill="#1B365D"
       />
       <Rect
         x="58"
         y="45"
         width="12"
         height="12"
-        fill="#4A90E2"
+        fill="#1B365D"
       />
     </Svg>
   );
