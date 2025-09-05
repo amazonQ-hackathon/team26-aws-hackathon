@@ -53,6 +53,13 @@ powershell Compress-Archive -Path *.js,*.json -DestinationPath matchProperties.z
 move matchProperties.zip ..\..\..\IaC\build\
 cd ..\..\..\IaC
 
+REM sendNotifications 패키징
+cd ..\sosimBack\lambda\sendNotifications
+if exist sendNotifications.zip del sendNotifications.zip
+powershell Compress-Archive -Path *.js,*.json -DestinationPath sendNotifications.zip
+move sendNotifications.zip ..\..\..\IaC\build\
+cd ..\..\..\IaC
+
 echo 2. Terraform Initialize...
 terraform init
 

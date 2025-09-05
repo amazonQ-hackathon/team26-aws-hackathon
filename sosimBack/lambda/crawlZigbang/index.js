@@ -19,7 +19,8 @@ const DIRECTION_MAPPING = {
 };
 
 exports.handler = async (event) => {
-    console.log('크롤링 시작:', new Date().toISOString());
+    const startTime = new Date().toISOString();
+    console.log('크롤링 시작:', startTime);
     
     try {
         // 실제 검색 API로 매물 ID 목록 가져오기
@@ -59,6 +60,10 @@ exports.handler = async (event) => {
         
         console.log(`크롤링 완료 - 성공: ${successCount}, 실패: ${errorCount}`);
         
+        // 성공 메트릭 발송
+        await publishCustomMetric('CrawlingSuccess', successCount);
+        await publishCustomMetric('CrawlingFailures', errorCount);
+        
         return {
             statusCode: 200,
             body: JSON.stringify({
@@ -70,15 +75,44 @@ exports.handler = async (event) => {
         };
         
     } catch (error) {
-        console.error('크롤링 에러:', error);
+        console.error('크롤링 에러:', {
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString(),
+            event: event
+        });
+        
+        // CloudWatch 사용자 정의 메트릭
+        await publishCustomMetric('CrawlingErrors', 1);
+        
         return {
             statusCode: 500,
             body: JSON.stringify({
                 error: '크롤링 실패',
-                message: error.message
+                message: error.message,
+                timestamp: new Date().toISOString()
             })
         };
     }
+};
+
+// CloudWatch 사용자 정의 메트릭 발송
+async function publishCustomMetric(metricName, value) {
+    try {
+        const cloudwatch = new AWS.CloudWatch();
+        await cloudwatch.putMetricData({
+            Namespace: 'HouseFinder/Crawling',
+            MetricData: [{
+                MetricName: metricName,
+                Value: value,
+                Unit: 'Count',
+                Timestamp: new Date()
+            }]
+        }).promise();
+    } catch (err) {
+        console.error('메트릭 발송 실패:', err);
+    }
+}
 };
 
 // 직방 API에서 매물 정보 가져오기
