@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import SplashScreen from './SplashScreen';
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Q-riosity</Text>
-      <Text style={styles.subtitle}>Amazon Q Developer Hackathon</Text>
+      <Text style={styles.subtitle}>집 구하기 도우미</Text>
       
       <TouchableOpacity style={styles.button}>
         <Text style={styles.buttonText}>시작하기</Text>
