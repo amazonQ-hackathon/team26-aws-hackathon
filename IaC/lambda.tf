@@ -180,6 +180,24 @@ resource "aws_lambda_function" "match_properties" {
   }
 }
 
+resource "aws_lambda_function" "send_notifications" {
+  filename         = "build/sendNotifications.zip"
+  function_name    = "house-finder-send-notifications"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.handler"
+  runtime         = "nodejs16.x"
+  timeout         = 60
+  source_code_hash = filebase64sha256("build/sendNotifications.zip")
+
+  environment {
+    variables = {
+      USER_FILTERS_TABLE = aws_dynamodb_table.user_filters.name
+      USER_FILTER_MATCHES_TABLE = aws_dynamodb_table.user_filter_matches.name
+      SNS_TOPIC_ARN = aws_sns_topic.house_notifications.arn
+    }
+  }
+}
+
 # Lambda Permissions for API Gateway
 resource "aws_lambda_permission" "register_filter_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
@@ -235,6 +253,13 @@ resource "aws_cloudwatch_event_target" "matching_target" {
   arn       = aws_lambda_function.match_properties.arn
 }
 
+# EventBridge Target for Notifications
+resource "aws_cloudwatch_event_target" "notification_target" {
+  rule      = aws_cloudwatch_event_rule.crawling_schedule.name
+  target_id = "NotificationLambdaTarget"
+  arn       = aws_lambda_function.send_notifications.arn
+}
+
 resource "aws_lambda_permission" "allow_eventbridge_crawling" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
@@ -247,6 +272,14 @@ resource "aws_lambda_permission" "allow_eventbridge_matching" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.match_properties.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.crawling_schedule.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_notifications" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.send_notifications.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.crawling_schedule.arn
 }
