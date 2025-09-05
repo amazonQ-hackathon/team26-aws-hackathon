@@ -1,5 +1,10 @@
 # API 명세서
 
+## 도메인
+```
+https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com
+```
+
 ## 1. 필터 관리
 
 ### 1.1 필터 등록

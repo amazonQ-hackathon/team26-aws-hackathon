@@ -1,9 +1,0 @@
-{
-  "name": "get-filters",
-  "version": "1.0.0",
-  "description": "Get user filters",
-  "main": "index.js",
-  "dependencies": {
-    "aws-sdk": "^2.1000.0"
-  }
-}

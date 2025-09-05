@@ -1,0 +1,9 @@
+{
+  "name": "match-properties",
+  "version": "1.0.0",
+  "description": "Match properties with filters",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1000.0"
+  }
+}
