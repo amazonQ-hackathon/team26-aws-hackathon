@@ -3,30 +3,25 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, FlatLi
 import { StatusBar } from 'expo-status-bar';
 import SplashScreen from './SplashScreen';
 import FindAsset from './findAsset';
+import AssetDetailInfo from './AssetDetailInfo';
 
-const propertyTypes = [
-  { id: 1, name: '원룸', icon: '🏠', color: '#FF6B6B' },
-  { id: 2, name: '오피스텔', icon: '🏢', color: '#4ECDC4' },
-  { id: 3, name: '아파트', icon: '🏬', color: '#45B7D1' },
-  { id: 4, name: '주택', icon: '🏡', color: '#96CEB4' },
-];
-
-const recentProperties = [
-  { id: 1, title: '강남역 원룸', price: '월세 500/50', area: '20㎡' },
-  { id: 2, title: '홍대입구 오피스텔', price: '월세 1000/80', area: '35㎡' },
-  { id: 3, title: '역삼동 아파트', price: '전세 3억', area: '84㎡' },
-  { id: 4, title: '이태원역 원룸', price: '월세 700/60', area: '25㎡' },
-  { id: 5, title: '신촌역 오피스텔', price: '월세 1200/100', area: '42㎡' },
-  { id: 6, title: '종로3가 원룸', price: '월세 600/40', area: '18㎡' },
-  { id: 7, title: '강남구 아파트', price: '전세 5억', area: '102㎡' },
-  { id: 8, title: '마포구 주택', price: '매매 8억', area: '120㎡' },
-  { id: 9, title: '서초동 오피스텔', price: '월세 1500/120', area: '50㎡' },
-  { id: 10, title: '영등포구 원룸', price: '월세 800/70', area: '30㎡' },
+const myFilters = [
+  { id: 1, name: '강남 원룸 필터', type: '월세', location: '강남구', priceRange: '500-800만원', direction: '남향' },
+  { id: 2, name: '홍대 오피스텔 필터', type: '전세', location: '마포구', priceRange: '1-2억', direction: '동향' },
+  { id: 3, name: '신촌 투룸 필터', type: '월세', location: '서대문구', priceRange: '1000-1500만원', direction: '남향' },
+  { id: 4, name: '역삼 아파트 필터', type: '전세', location: '강남구', priceRange: '3-5억', direction: '남향' },
 ];
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [showFindAsset, setShowFindAsset] = useState(false);
+  const [showAssetDetail, setShowAssetDetail] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState(null);
+  const [clickedProperties, setClickedProperties] = useState(new Set());
+  
+  const handlePropertyClick = (propertyId) => {
+    setClickedProperties(prev => new Set([...prev, propertyId]));
+  };
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
@@ -41,17 +36,6 @@ export default function App() {
       <View style={styles.header}>
         <Text style={styles.title}>Q-riosity</Text>
         <Text style={styles.subtitle}>어떤 집을 찾고 계신가요?</Text>
-        
-        <View style={styles.searchContainer}>
-          <TextInput 
-            style={styles.searchInput}
-            placeholder="지역, 역명 검색"
-            placeholderTextColor="#999"
-          />
-          <TouchableOpacity style={styles.searchButton}>
-            <Text style={styles.searchButtonText}>🔍</Text>
-          </TouchableOpacity>
-        </View>
       </View>
       
       <TouchableOpacity style={styles.questionSection} onPress={() => setShowFindAsset(true)}>
@@ -60,21 +44,41 @@ export default function App() {
       
       <FlatList
         style={styles.section}
-        data={recentProperties}
+        data={myFilters}
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={() => (
-          <Text style={styles.sectionTitle}>실시간 추천 매물</Text>
+          <Text style={styles.sectionTitle}>내 검색 히스토리</Text>
         )}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.propertyCard}>
-            <View style={styles.propertyInfo}>
-              <Text style={styles.propertyTitle}>{item.title}</Text>
-              <Text style={styles.propertyPrice}>{item.price}</Text>
-              <Text style={styles.propertyArea}>{item.area}</Text>
+          <TouchableOpacity 
+            style={styles.filterCard}
+            onPress={() => {
+              setSelectedFilter(item);
+              setShowAssetDetail(true);
+            }}
+          >
+            <View style={styles.filterHeader}>
+              <Text style={styles.filterName}>{item.name}</Text>
+              <View style={styles.filterType}>
+                <Text style={styles.filterTypeText}>{item.type}</Text>
+              </View>
+            </View>
+            <View style={styles.filterDetails}>
+              <Text style={styles.filterLocation}>📍 {item.location}</Text>
+              <Text style={styles.filterPrice}>💰 {item.priceRange}</Text>
+              <Text style={styles.filterDirection}>🧭 {item.direction}</Text>
             </View>
           </TouchableOpacity>
         )}
+      />
+      
+      <AssetDetailInfo 
+        visible={showAssetDetail}
+        onClose={() => setShowAssetDetail(false)}
+        filterData={selectedFilter}
+        clickedProperties={clickedProperties}
+        onPropertyClick={handlePropertyClick}
       />
       
       <StatusBar style="auto" />
@@ -161,7 +165,7 @@ const styles = StyleSheet.create({
     color: '#1B365D',
     marginBottom: 16,
   },
-  propertyCard: {
+  filterCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
@@ -172,22 +176,41 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  propertyInfo: {
-    flex: 1,
+  filterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  propertyTitle: {
+  filterName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  propertyPrice: {
-    fontSize: 18,
     fontWeight: '700',
     color: '#1B365D',
-    marginBottom: 4,
+    flex: 1,
   },
-  propertyArea: {
+  filterType: {
+    backgroundColor: '#1B365D',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  filterTypeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  filterDetails: {
+    gap: 6,
+  },
+  filterLocation: {
+    fontSize: 14,
+    color: '#666',
+  },
+  filterPrice: {
+    fontSize: 14,
+    color: '#666',
+  },
+  filterDirection: {
     fontSize: 14,
     color: '#666',
   },

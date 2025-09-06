@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, TextInput, Animated, ActivityIndicator } from 'react-native';
 import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
 
+// API 설정 - 실제 API Gateway URL로 변경하세요
+const API_BASE_URL = 'https://your-api-id.execute-api.us-east-1.amazonaws.com';
+
 const { height } = Dimensions.get('window');
 
 const transactionTypes = [
@@ -94,26 +97,63 @@ export default function FindAsset({ visible, onClose }) {
     
     console.log('API Parameters:', JSON.stringify(apiParams, null, 2));
     
+    // Mock API 시뮬레이션
     try {
-      const response = await fetch('https://your-api-domain.com/v1/filters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': '1'
+      // 1. 필터 등록 Mock Response
+      const mockCreateResult = { filterId: Math.floor(Math.random() * 1000) + 1 };
+      console.log('Filter Create Response (Mock):', mockCreateResult);
+      console.log('Filter created successfully with ID:', mockCreateResult.filterId);
+      
+      // 2. 필터 목록 조회 Mock Response
+      const mockListResult = [
+        {
+          filterId: mockCreateResult.filterId,
+          filterName: apiParams.filterName,
+          conditions: apiParams.conditions,
+          isActive: true,
+          createdAt: new Date().toISOString()
         },
-        body: JSON.stringify(apiParams)
+        {
+          filterId: 1,
+          filterName: '강남 전세 필터',
+          conditions: {
+            priceMin: 20000,
+            priceMax: 80000,
+            direction: ['남', '동'],
+            local1: '서울시',
+            local2: '강남구',
+            propertyType: 'LEASE'
+          },
+          isActive: true,
+          createdAt: '2024-01-15T10:30:00Z'
+        },
+        {
+          filterId: 2,
+          filterName: '홍대 월세 필터',
+          conditions: {
+            priceMax: 5000,
+            local2: '마포구',
+            propertyType: 'RENT'
+          },
+          isActive: true,
+          createdAt: '2024-01-16T14:20:00Z'
+        }
+      ];
+      
+      console.log('Filter List Response (Mock):', mockListResult);
+      console.log('Total filters:', mockListResult.length);
+      
+      mockListResult.forEach((filter, index) => {
+        console.log(`Filter ${index + 1}:`, {
+          id: filter.filterId,
+          name: filter.filterName,
+          active: filter.isActive,
+          created: filter.createdAt
+        });
       });
       
-      const result = await response.json();
-      console.log('API Response:', result);
-      
-      if (response.ok) {
-        console.log('Filter created successfully with ID:', result.filterId);
-      } else {
-        console.error('API Error:', result);
-      }
     } catch (error) {
-      console.error('Network Error:', error);
+      console.error('Mock API Error:', error);
     }
     
     setTimeout(() => {
