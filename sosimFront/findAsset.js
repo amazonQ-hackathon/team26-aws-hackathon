@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, TextInput, Animated, ActivityIndicator } from 'react-native';
 import { PanGestureHandler, GestureHandlerRootView } from 'react-native-gesture-handler';
+import ConditionInput from './ConditionInput';
 
-// API 설정 - 실제 API Gateway URL로 변경하세요
-const API_BASE_URL = 'https://your-api-id.execute-api.us-east-1.amazonaws.com';
+// API 설정
+const API_BASE_URL = 'https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod';
 
 const { height } = Dimensions.get('window');
 
@@ -12,12 +13,14 @@ const transactionTypes = [
   { id: 'RENT', label: '월세' },
 ];
 
-export default function FindAsset({ visible, onClose }) {
+export default function FindAsset({ visible, onClose, onRefresh }) {
   const [selectedTransactionTypes, setSelectedTransactionTypes] = useState([]);
   const [selectedDirections, setSelectedDirections] = useState([]);
   const [selectedApprovalDate, setSelectedApprovalDate] = useState(null);
-  const [depositValue, setDepositValue] = useState(0);
-  const [monthlyValue, setMonthlyValue] = useState(0);
+  const [depositMin, setDepositMin] = useState('');
+  const [depositMax, setDepositMax] = useState('');
+  const [monthlyMin, setMonthlyMin] = useState('');
+  const [monthlyMax, setMonthlyMax] = useState('');
   const [filterName, setFilterName] = useState('');
   const [local1, setLocal1] = useState('');
   const [local2, setLocal2] = useState('');
@@ -25,8 +28,7 @@ export default function FindAsset({ visible, onClose }) {
   const [floorMin, setFloorMin] = useState('');
   const [floorMax, setFloorMax] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const depositTranslateX = new Animated.Value(0);
-  const monthlyTranslateX = new Animated.Value(0);
+  const [showConditionInput, setShowConditionInput] = useState(false);
 
   const approvalDateOptions = [
     { id: 1, label: '전체' },
@@ -36,15 +38,7 @@ export default function FindAsset({ visible, onClose }) {
     { id: 5, label: '15년 이상' },
   ];
 
-  const SLIDER_WIDTH = 250;
-  const MAX_DEPOSIT = 10000; // 1억
-  const MAX_MONTHLY = 500; // 500만원
 
-  const formatPrice = (value) => {
-    if (value >= 10000) return '무제한';
-    if (value >= 1000) return `${Math.floor(value / 1000)}천만원`;
-    return `${value}만원`;
-  };
 
   const toggleTransactionType = (typeId) => {
     setSelectedTransactionTypes(prev => 
@@ -78,13 +72,60 @@ export default function FindAsset({ visible, onClose }) {
     return dateMap[selectedApprovalDate] || null;
   };
 
+
+
+  const fetchHistory = async (filterId, filterName, conditions) => {
+    try {
+      console.log('📜 히스토리 매물 조회 시작 - Filter ID:', filterId);
+      
+      const historyResponse = await fetch(`${API_BASE_URL}/v1/filters/${filterId}/history?page=1&limit=20`, {
+        method: 'GET',
+        headers: {
+          'X-User-Id': '1'
+        }
+      });
+      
+      console.log('📥 History Response Status:', historyResponse.status);
+      
+      const historyResult = await historyResponse.json();
+      console.log('📥 History Response:', historyResult);
+      
+      if (historyResponse.ok) {
+        console.log('✅ 히스토리 조회 성공!');
+        console.log(`🏠 총 ${historyResult.totalCount || 0}개 매물 발견`);
+        console.log(`📊 현재 페이지: ${historyResult.currentPage}/${historyResult.totalPages}`);
+        
+        
+          console.log('📄 매물 목록:');
+          historyResult.properties.forEach((property, index) => {
+            console.log(`  ${index + 1}. ${property.title}`);
+            console.log(`     가격: ${property.price}만원 | 위치: ${property.local2} ${property.local3}`);
+            console.log(`     층수: ${property.floor}층 | 방향: ${property.direction}향`);
+            console.log(`     URL: ${property.sourceUrl}`);
+          });
+          
+          console.log(filterId); 
+          console.log(historyResult.properties);
+
+      } else {
+        console.error('❌ 히스토리 조회 실패:', historyResult);
+      }
+      
+    } catch (error) {
+      console.error('❌ 히스토리 조회 오류:', error);
+    }
+  };
+
   const handleApply = async () => {
     setIsLoading(true);
     
     const apiParams = {
       filterName: filterName || '내 필터',
       conditions: {
-        ...(depositValue > 0 && { priceMin: depositValue }),
+        ...(depositMin && { depositMin: parseInt(depositMin) }),
+        ...(depositMax && { depositMax: parseInt(depositMax) }),
+        ...(monthlyMin && { monthlyMin: parseInt(monthlyMin) }),
+        ...(monthlyMax && { monthlyMax: parseInt(monthlyMax) }),
         ...(selectedDirections.length > 0 && { direction: selectedDirections.map(d => d.charAt(0)) }),
         ...(getApprovalDateMin() && { approvalDateMin: getApprovalDateMin() }),
         ...(local1 && { local1 }),
@@ -95,65 +136,56 @@ export default function FindAsset({ visible, onClose }) {
       }
     };
     
-    console.log('API Parameters:', JSON.stringify(apiParams, null, 2));
+    console.log('📤 API Request:', JSON.stringify(apiParams, null, 2));
     
-    // Mock API 시뮬레이션
     try {
-      // 1. 필터 등록 Mock Response
-      const mockCreateResult = { filterId: Math.floor(Math.random() * 1000) + 1 };
-      console.log('Filter Create Response (Mock):', mockCreateResult);
-      console.log('Filter created successfully with ID:', mockCreateResult.filterId);
-      
-      // 2. 필터 목록 조회 Mock Response
-      const mockListResult = [
-        {
-          filterId: mockCreateResult.filterId,
-          filterName: apiParams.filterName,
-          conditions: apiParams.conditions,
-          isActive: true,
-          createdAt: new Date().toISOString()
-        },
-        {
-          filterId: 1,
-          filterName: '강남 전세 필터',
-          conditions: {
-            priceMin: 20000,
-            priceMax: 80000,
-            direction: ['남', '동'],
-            local1: '서울시',
-            local2: '강남구',
-            propertyType: 'LEASE'
-          },
-          isActive: true,
-          createdAt: '2024-01-15T10:30:00Z'
-        },
-        {
-          filterId: 2,
-          filterName: '홍대 월세 필터',
-          conditions: {
-            priceMax: 5000,
-            local2: '마포구',
-            propertyType: 'RENT'
-          },
-          isActive: true,
-          createdAt: '2024-01-16T14:20:00Z'
-        }
-      ];
-      
-      console.log('Filter List Response (Mock):', mockListResult);
-      console.log('Total filters:', mockListResult.length);
-      
-      mockListResult.forEach((filter, index) => {
-        console.log(`Filter ${index + 1}:`, {
-          id: filter.filterId,
-          name: filter.filterName,
-          active: filter.isActive,
-          created: filter.createdAt
-        });
+      console.log('🌐 API URL:', `${API_BASE_URL}/v1/filters`);
+      console.log('📋 Headers:', {
+        'Content-Type': 'application/json',
+        'X-User-Id': '1'
       });
       
+      const response = await fetch(`${API_BASE_URL}/v1/filters`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': '1'
+        },
+        body: JSON.stringify(apiParams)
+      });
+      
+      console.log('📥 Response Status:', response.status);
+      console.log('📥 Response Headers:', response.headers);
+      
+      if (response.status === 403) {
+        console.error('❌ 403 Forbidden - 권한 문제 또는 CORS 설정 확인 필요');
+        console.error('🔍 가능한 원인:');
+        console.error('  1. API Gateway CORS 설정');
+        console.error('  2. X-User-Id 헤더 인증 문제');
+        console.error('  3. Lambda 함수 권한 설정');
+      }
+      
+      const result = await response.json();
+  
+      console.log('📥 API Response:', result); 
+
+      if (response.ok) {
+        console.log('✅ Filter created successfully with ID:', result.filterId);
+        
+        // 필터 생성 후 히스토리 매물 조회
+        await fetchHistory(result.filterId, apiParams.filterName, apiParams.conditions);
+        
+        // 메인화면 데이터 새로고침
+        if (onRefresh) {
+          console.log('🔄 findAsset handleApply 성공 - 메인화면 새로고침 요청');
+          onRefresh();
+        }
+      } else {
+        console.error('❌ API Error:', result);
+      }
+      
     } catch (error) {
-      console.error('Mock API Error:', error);
+      console.error('❌ Network Error:', error);
     }
     
     setTimeout(() => {
@@ -186,6 +218,13 @@ export default function FindAsset({ visible, onClose }) {
               value={filterName}
               onChangeText={setFilterName}
             />
+            <TouchableOpacity 
+              style={styles.bannerContainer}
+              onPress={() => setShowConditionInput(true)}
+            >
+              <Text style={styles.bannerText}>🏠 원하는 조건을 적어보세요 🏠</Text>
+              <Text style={styles.bannerSubtext}>자세한 조건일수록 더 정확한 매물을 찾을 수 있어요</Text>
+            </TouchableOpacity>
           </View>
           
           <View style={styles.sectionContainer}>
@@ -214,68 +253,44 @@ export default function FindAsset({ visible, onClose }) {
 
           
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>• 보증금</Text>
-            <View style={styles.sliderContainer}>
-              <Text style={styles.priceLabel}>{formatPrice(depositValue)} ~ 무제한</Text>
-              <View style={styles.sliderTrack}>
-                <PanGestureHandler
-                  onGestureEvent={Animated.event(
-                    [{ nativeEvent: { translationX: depositTranslateX } }],
-                    { 
-                      useNativeDriver: false,
-                      listener: (event) => {
-                        const clampedX = Math.max(0, Math.min(SLIDER_WIDTH - 20, event.nativeEvent.translationX));
-                        depositTranslateX.setValue(clampedX);
-                        const percentage = clampedX / (SLIDER_WIDTH - 20);
-                        const newValue = Math.round(percentage * MAX_DEPOSIT / 100) * 100;
-                        setDepositValue(newValue);
-                      }
-                    }
-                  )}
-                  onHandlerStateChange={(event) => {
-                    if (event.nativeEvent.state === 5) {
-                      // Keep thumb at current position
-                    }
-                  }}
-                >
-                  <Animated.View style={[styles.sliderThumb, { transform: [{ translateX: depositTranslateX }] }]} />
-                </PanGestureHandler>
-              </View>
+            <Text style={styles.sectionTitle}>• 보증금 (단위 : 만원)</Text>
+            <View style={styles.inputRow}>
+              <TextInput 
+                style={styles.priceInput} 
+                placeholder="최소" 
+                keyboardType="numeric" 
+                value={depositMin}
+                onChangeText={setDepositMin}
+              />
+              <Text style={styles.separator}>~</Text>
+              <TextInput 
+                style={styles.priceInput} 
+                placeholder="최대" 
+                keyboardType="numeric" 
+                value={depositMax}
+                onChangeText={setDepositMax}
+              />
             </View>
           </View>
           
-          <View style={[styles.sectionContainer, !selectedTransactionTypes.includes('RENT') && styles.disabledSection]}>
-            <Text style={[styles.sectionTitle, !selectedTransactionTypes.includes('RENT') && styles.disabledText]}>• 월세</Text>
-            <View style={styles.sliderContainer}>
-              <Text style={[styles.priceLabel, !selectedTransactionTypes.includes('RENT') && styles.disabledText]}>
-                {!selectedTransactionTypes.includes('RENT') ? '월세 선택 시 활성' : `${formatPrice(monthlyValue)} ~ 무제한`}
-              </Text>
-              <View style={[styles.sliderTrack, !selectedTransactionTypes.includes('RENT') && styles.disabledTrack]}>
-                {selectedTransactionTypes.includes('RENT') && (
-                  <PanGestureHandler
-                    onGestureEvent={Animated.event(
-                      [{ nativeEvent: { translationX: monthlyTranslateX } }],
-                      { 
-                        useNativeDriver: false,
-                        listener: (event) => {
-                          const clampedX = Math.max(0, Math.min(SLIDER_WIDTH - 20, event.nativeEvent.translationX));
-                          monthlyTranslateX.setValue(clampedX);
-                          const percentage = clampedX / (SLIDER_WIDTH - 20);
-                          const newValue = Math.round(percentage * MAX_MONTHLY / 10) * 10;
-                          setMonthlyValue(newValue);
-                        }
-                      }
-                    )}
-                    onHandlerStateChange={(event) => {
-                      if (event.nativeEvent.state === 5) {
-                        // Keep thumb at current position
-                      }
-                    }}
-                  >
-                    <Animated.View style={[styles.sliderThumb, { transform: [{ translateX: monthlyTranslateX }] }]} />
-                  </PanGestureHandler>
-                )}
-              </View>
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>• 월세 (단위 : 만원)</Text>
+            <View style={styles.inputRow}>
+              <TextInput 
+                style={styles.priceInput} 
+                placeholder="최소" 
+                keyboardType="numeric" 
+                value={monthlyMin}
+                onChangeText={setMonthlyMin}
+              />
+              <Text style={styles.separator}>~</Text>
+              <TextInput 
+                style={styles.priceInput} 
+                placeholder="최대" 
+                keyboardType="numeric" 
+                value={monthlyMax}
+                onChangeText={setMonthlyMax}
+              />
             </View>
           </View>
           
@@ -383,6 +398,16 @@ export default function FindAsset({ visible, onClose }) {
           </View>
         </View>
       )}
+      
+      <ConditionInput 
+        visible={showConditionInput}
+        onClose={() => setShowConditionInput(false)}
+        onSuccess={() => {
+          if (onRefresh) {
+            onRefresh();
+          }
+        }}
+      />
     </GestureHandlerRootView>
   );
 }
@@ -485,42 +510,14 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
-  sliderContainer: {
-    width: '100%',
+  priceInput: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    paddingHorizontal: 12,
     paddingVertical: 10,
-  },
-  priceLabel: {
-    fontSize: 16,
-    color: '#1B365D',
-    fontWeight: '600',
+    fontSize: 14,
     textAlign: 'center',
-    marginBottom: 20,
-  },
-  sliderTrack: {
-    height: 6,
-    backgroundColor: '#ddd',
-    borderRadius: 3,
-    width: 250,
-    alignSelf: 'center',
-    position: 'relative',
-  },
-
-  sliderThumb: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    backgroundColor: '#1B365D',
-    borderRadius: 10,
-    top: -7,
-  },
-  disabledSection: {
-    opacity: 0.5,
-  },
-  disabledText: {
-    color: '#999',
-  },
-  disabledTrack: {
-    backgroundColor: '#f0f0f0',
   },
   inputRow: {
     flexDirection: 'row',
@@ -616,5 +613,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1B365D',
     fontWeight: '600',
+  },
+  bannerContainer: {
+    marginTop: 15,
+    backgroundColor: '#667eea',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  bannerText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  bannerSubtext: {
+    fontSize: 12,
+    color: '#fff',
+    textAlign: 'center',
+    opacity: 0.9,
   },
 });
