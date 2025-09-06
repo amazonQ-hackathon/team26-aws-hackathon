@@ -18,11 +18,14 @@
 원하는 집의 조건을 정리하고 그 조건에 맞는 집을 나에게 직접 가져다주는(내가 찾아가는게 아니라) 서비스입니다.
 
 ## 주요 기능
-![01_main](https://github.com/user-attachments/assets/30fae5aa-a635-4348-b43b-a3f47fbc246c)
-![02](https://github.com/user-attachments/assets/8dc1651e-5f04-4ba7-b8da-5af758569c4a)
-![03](https://github.com/user-attachments/assets/df267a2b-c08b-4e34-aa8b-a4e58e24c362)
-![04](https://github.com/user-attachments/assets/4a439c36-8280-4ca2-8bb7-aaadf2759a23)
-![05](https://github.com/user-attachments/assets/c42af1af-ccea-48aa-bb29-959653779418)
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/30fae5aa-a635-4348-b43b-a3f47fbc246c" width="19%" height="auto" alt="01_main">
+  <img src="https://github.com/user-attachments/assets/8dc1651e-5f04-4ba7-b8da-5af758569c4a" width="19%" height="auto" alt="02">
+  <img src="https://github.com/user-attachments/assets/df267a2b-c08b-4e34-aa8b-a4e58e24c362" width="19%" height="auto" alt="03">
+  <img src="https://github.com/user-attachments/assets/4a439c36-8280-4ca2-8bb7-aaadf2759a23" width="19%" height="auto" alt="04">
+  <img src="https://github.com/user-attachments/assets/c42af1af-ccea-48aa-bb29-959653779418" width="19%" height="auto" alt="05">
+</p>
 
 1. **관심조건 등록**: 원하는 부동산 조건을 자연어로 입력하거나 상세 조건으로 등록합니다.
 2. **매물 매칭**: 등록된 관심 조건에 맞는 매물을 자동으로 확인하고 알려줍니다.
