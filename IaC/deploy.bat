@@ -60,6 +60,13 @@ powershell Compress-Archive -Path *.js,*.json -DestinationPath sendNotifications
 move sendNotifications.zip ..\..\..\IaC\build\
 cd ..\..\..\IaC
 
+REM parseNaturalFilter 패키징
+cd ..\sosimBack\lambda\parseNaturalFilter
+if exist parseNaturalFilter.zip del parseNaturalFilter.zip
+powershell Compress-Archive -Path *.js,*.json -DestinationPath parseNaturalFilter.zip
+move parseNaturalFilter.zip ..\..\..\IaC\build\
+cd ..\..\..\IaC
+
 echo 2. Terraform Initialize...
 terraform init
 

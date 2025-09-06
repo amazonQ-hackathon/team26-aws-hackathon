@@ -29,7 +29,8 @@ resource "aws_api_gateway_deployment" "house_finder_deployment" {
     aws_api_gateway_integration.filters_get,
     aws_api_gateway_integration.filters_delete,
     aws_api_gateway_integration.matches_get,
-    aws_api_gateway_integration.filter_history_get
+    aws_api_gateway_integration.filter_history_get,
+    aws_api_gateway_integration.filters_parse_post
   ]
 
   rest_api_id = aws_api_gateway_rest_api.house_finder_api.id
@@ -133,6 +134,30 @@ resource "aws_dynamodb_table" "user_filter_matches" {
 # SNS Topic for Push Notifications
 resource "aws_sns_topic" "house_notifications" {
   name = "house-notifications"
+}
+
+# S3 Bucket for temporary audio files
+resource "aws_s3_bucket" "temp_audio_bucket" {
+  bucket = "house-finder-temp-audio-${random_string.bucket_suffix.result}"
+}
+
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "temp_audio_lifecycle" {
+  bucket = aws_s3_bucket.temp_audio_bucket.id
+
+  rule {
+    id     = "delete_temp_files"
+    status = "Enabled"
+
+    expiration {
+      days = 1
+    }
+  }
 }
 
 # EventBridge Rule for Crawling

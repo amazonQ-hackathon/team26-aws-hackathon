@@ -198,6 +198,22 @@ resource "aws_lambda_function" "send_notifications" {
   }
 }
 
+resource "aws_lambda_function" "parse_natural_filter" {
+  filename         = "build/parseNaturalFilter.zip"
+  function_name    = "house-finder-parse-natural-filter"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.handler"
+  runtime         = "nodejs16.x"
+  timeout         = 300
+  source_code_hash = filebase64sha256("build/parseNaturalFilter.zip")
+
+  environment {
+    variables = {
+      TEMP_AUDIO_BUCKET = aws_s3_bucket.temp_audio_bucket.bucket
+    }
+  }
+}
+
 # Lambda Permissions for API Gateway
 resource "aws_lambda_permission" "register_filter_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"

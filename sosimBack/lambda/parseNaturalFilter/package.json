@@ -1,0 +1,6 @@
+{
+  "name": "parse-natural-filter",
+  "version": "1.0.0",
+  "description": "Parse natural language input for property filters using Bedrock",
+  "main": "index.js"
+}
