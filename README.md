@@ -18,6 +18,11 @@
 원하는 집의 조건을 정리하고 그 조건에 맞는 집을 나에게 직접 가져다주는(내가 찾아가는게 아니라) 서비스입니다.
 
 ## 주요 기능
+![01_main](https://github.com/user-attachments/assets/30fae5aa-a635-4348-b43b-a3f47fbc246c)
+![02](https://github.com/user-attachments/assets/8dc1651e-5f04-4ba7-b8da-5af758569c4a)
+![03](https://github.com/user-attachments/assets/df267a2b-c08b-4e34-aa8b-a4e58e24c362)
+![04](https://github.com/user-attachments/assets/4a439c36-8280-4ca2-8bb7-aaadf2759a23)
+![05](https://github.com/user-attachments/assets/c42af1af-ccea-48aa-bb29-959653779418)
 
 1. **관심조건 등록**: 원하는 부동산 조건을 자연어로 입력하거나 상세 조건으로 등록합니다.
 2. **매물 매칭**: 등록된 관심 조건에 맞는 매물을 자동으로 확인하고 알려줍니다.
@@ -25,7 +30,8 @@
 4. **히스토리 조회**: 필터 생성 전후의 매물 히스토리를 확인할 수 있습니다.
 
 ## 동영상 데모
-Amazon Q Developer로 구현한 어플리케이션의 데모 영상을 입력합니다. Git의 Readme에는 GIF 형식으로 업로드하며, 원본 동영상은 발표 Presentation에 제출합니다.
+![live demo](https://github.com/user-attachments/assets/71459b76-ffba-4f7f-9e2f-a4c3cc5e2aa7)
+
 
 ## 리소스 배포하기
 
