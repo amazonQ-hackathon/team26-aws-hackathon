@@ -1,6 +1,6 @@
-const AWS = require('aws-sdk');
+const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 
-const bedrock = new AWS.BedrockRuntime({
+const bedrock = new BedrockRuntimeClient({
     region: 'us-east-1'
 });
 
@@ -62,8 +62,8 @@ async function parseWithBedrock(textInput) {
 }`;
 
     try {
-        const params = {
-            modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+        const command = new InvokeModelCommand({
+            modelId: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
             contentType: 'application/json',
             accept: 'application/json',
             body: JSON.stringify({
@@ -74,10 +74,10 @@ async function parseWithBedrock(textInput) {
                     content: prompt
                 }]
             })
-        };
+        });
         
-        const response = await bedrock.invokeModel(params).promise();
-        const responseBody = JSON.parse(response.body.toString());
+        const response = await bedrock.send(command);
+        const responseBody = JSON.parse(new TextDecoder().decode(response.body));
         const content = responseBody.content[0].text;
         
         const jsonMatch = content.match(/\{[\s\S]*\}/);

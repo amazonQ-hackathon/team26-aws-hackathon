@@ -60,9 +60,33 @@ GET /v1/filters
   ]
 ```
 
-## 2. 히스토리 조회
+## 2. 텍스트 파싱
 
-### 2.1 필터 생성 이후 등록된 매물 조회
+### 2.1 자연어 텍스트 파싱
+```
+POST /v1/filters/parse
+- 자연어 텍스트를 관심조건으로 파싱
+- Body: {
+    type: "text" | "voice",
+    content: "강남구 전세 3억 이하 남향" | <base64 audio>
+  }
+- Response: {
+    originalInput: "강남구 전세 3억 이하 남향",
+    filterName: "강남구 전세 관심조건",
+    conditions: {
+      local1: "서울시",
+      local2: "강남구",
+      propertyType: "LEASE", 
+      priceMax: 30000,
+      direction: ["남"]
+    },
+    humanReadable: "강남구 전세 3억원 이하 남향"
+  }
+```
+
+## 3. 히스토리 조회
+
+### 3.1 필터 생성 이후 등록된 매물 조회
 ```
 GET /v1/filters/{filterId}/matches
 - 필터 생성 이후에 등록된 매물 중 조건에 맞는 매물 목록
@@ -100,7 +124,7 @@ GET /v1/filters/{filterId}/matches
   }
 ```
 
-### 2.2 필터 생성 이전 등록된 매물 조회
+### 3.2 필터 생성 이전 등록된 매물 조회
 ```
 GET /v1/filters/{filterId}/history
 - 필터 생성 이전에 등록된 과거 일주일치 매물 중 조건에 맞는 매물
@@ -133,9 +157,9 @@ GET /v1/filters/{filterId}/history
   }
 ```
 
-## 3. 데이터 타입 정의
+## 4. 데이터 타입 정의
 
-### 3.1 필터 조건 (conditions)
+### 4.1 필터 조건 (conditions)
 ```javascript
 {
   priceMin: Number,           // 최소가격 (만원 단위, 선택)
@@ -152,7 +176,7 @@ GET /v1/filters/{filterId}/history
 }
 ```
 
-### 3.2 매물타입 코드
+### 4.2 매물타입 코드
 ```javascript
 const PROPERTY_TYPE = {
   LEASE: "전세",
@@ -163,9 +187,9 @@ const PROPERTY_TYPE = {
 
 
 
-## 4. Mock 데이터 예시
+## 5. Mock 데이터 예시
 
-### 4.1 필터 등록 Mock 데이터
+### 5.1 필터 등록 Mock 데이터
 ```json
 {
   "filterName": "강남 전세 필터",
@@ -183,7 +207,7 @@ const PROPERTY_TYPE = {
 }
 ```
 
-### 4.2 필터 목록 조회 Mock 응답
+### 5.2 필터 목록 조회 Mock 응답
 ```json
 [
   {
@@ -214,7 +238,7 @@ const PROPERTY_TYPE = {
 ]
 ```
 
-### 4.3 매칭 매물 조회 Mock 응답
+### 5.3 매칭 매물 조회 Mock 응답
 ```json
 {
   "totalCount": 25,
@@ -244,7 +268,7 @@ const PROPERTY_TYPE = {
 }
 ```
 
-### 4.4 히스토리 조회 Mock 응답
+### 5.4 히스토리 조회 Mock 응답
 ```json
 {
   "totalCount": 18,
@@ -271,7 +295,31 @@ const PROPERTY_TYPE = {
 }
 ```
 
-### 4.5 테스트용 cURL 명령어
+### 5.5 텍스트 파싱 Mock 예시
+```json
+{
+  "type": "text",
+  "content": "강남구 전세 3억 이하 남향"
+}
+```
+
+### 5.6 텍스트 파싱 Mock 응답
+```json
+{
+  "originalInput": "강남구 전세 3억 이하 남향",
+  "filterName": "강남구 전세 관심조건",
+  "conditions": {
+    "local1": "서울시",
+    "local2": "강남구",
+    "propertyType": "LEASE",
+    "priceMax": 30000,
+    "direction": ["남"]
+  },
+  "humanReadable": "강남구 전세 3억원 이하 남향"
+}
+```
+
+### 5.7 테스트용 cURL 명령어
 ```bash
 # 1. 필터 등록
 curl -X POST https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/filters \
@@ -305,9 +353,17 @@ curl -X DELETE https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/fi
   -H "X-User-Id: 1"
 ```
 
-## 5. 에러 응답
+# 6. 텍스트 파싱 API 테스트
+curl -X POST https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/filters/parse \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "text",
+    "content": "강남구 전세 3억 이하 남향"
+  }'
 
-### 5.1 공통 에러 형식
+## 6. 에러 응답
+
+### 6.1 공통 에러 형식
 ```javascript
 {
   error: {
@@ -318,7 +374,8 @@ curl -X DELETE https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/fi
 }
 ```
 
-### 5.2 에러 코드
+### 6.2 에러 코드
+- `PARSING_ERROR`: 텍스트 파싱 오류
 - `INVALID_INPUT`: 입력값 오류
 - `FILTER_NOT_FOUND`: 필터를 찾을 수 없음
 - `USER_NOT_FOUND`: 사용자를 찾을 수 없음
