@@ -35,6 +35,18 @@ resource "aws_api_gateway_deployment" "house_finder_deployment" {
 
   rest_api_id = aws_api_gateway_rest_api.house_finder_api.id
   stage_name  = "prod"
+  
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.filters_parse.id,
+      aws_api_gateway_method.filters_parse_post.id,
+      aws_api_gateway_integration.filters_parse_post.id,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # DynamoDB Tables

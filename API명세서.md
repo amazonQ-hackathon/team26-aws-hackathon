@@ -2,7 +2,7 @@
 
 ## 도메인
 ```
-https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com
+https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod
 ```
 
 ## 1. 필터 관리
@@ -274,7 +274,7 @@ const PROPERTY_TYPE = {
 ### 4.5 테스트용 cURL 명령어
 ```bash
 # 1. 필터 등록
-curl -X POST https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters \
+curl -X POST https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/filters \
   -H "X-User-Id: 1" \
   -H "Content-Type: application/json" \
   -d '{
@@ -289,19 +289,19 @@ curl -X POST https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters 
   }'
 
 # 2. 필터 목록 조회
-curl -X GET https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters \
+curl -X GET https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/filters \
   -H "X-User-Id: 1"
 
 # 3. 필터별 매칭 매물 조회
-curl -X GET https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters/1/matches?page=1&limit=20 \
+curl -X GET https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/filters/1/matches?page=1&limit=20 \
   -H "X-User-Id: 1"
 
 # 4. 필터별 히스토리 조회
-curl -X GET https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters/1/history?page=1&limit=20 \
+curl -X GET https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/filters/1/history?page=1&limit=20 \
   -H "X-User-Id: 1"
 
 # 5. 필터 삭제
-curl -X DELETE https://your-api-id.execute-api.us-east-1.amazonaws.com/v1/filters/1 \
+curl -X DELETE https://8pm5j6aiuc.execute-api.us-east-1.amazonaws.com/prod/v1/filters/1 \
   -H "X-User-Id: 1"
 ```
 
